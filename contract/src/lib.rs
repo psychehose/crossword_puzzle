@@ -32,12 +32,18 @@ impl Contract {
         PUZZLE_NUMBER
     }
 
-    pub fn set_solution(&mut self, solution: String) {
-        self.crossword_solution = solution;
+    pub fn get_solution(&self) -> String {
+        self.crossword_solution.clone()
     }
 
+    // pub fn set_solution(&mut self, solution: String) {
+    //     self.crossword_solution = solution;
+    // }
+
     // 로그에 일정량의 가스가 필요하기 떄문에
-    pub fn guess_solution(&mut self, solution: String) -> bool{
+    pub fn guess_solution(&mut self, solution: String) -> bool {
+        let hashed_input = env::sha256(solution.as_bytes());
+        let hashed_input_hex = hex::encode(&hashed_input);
         if solution == self.crossword_solution {
             env::log_str("You guessed right");
             return true;

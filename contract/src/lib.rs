@@ -21,6 +21,12 @@ pub struct Contract {
 
 #[near_bindgen]
 impl Contract {
+    #[init]
+    pub fn new(solution: String) -> Self {
+        Self {
+            crossword_solution: solution,
+        }
+    }
 
     pub fn get_puzzle_number(&self) -> u8 {
         PUZZLE_NUMBER
@@ -70,9 +76,9 @@ mod tests {
         let context = get_context(alice);
         testing_env!(context.build());
 
-        let mut contract = Contract {
-            crossword_solution: "69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string()
-        };
+        let mut contract = Contract::new(
+            "69c2feb084439956193f4c21936025f14a5a5a78979d67ae34762e18a7206a0f".to_string()
+        );
         let mut guess_result = contract.guess_solution("It is Wrong Answer".to_string());
         assert!(!guess_result, "Expected a failure from the wrong guess");
 

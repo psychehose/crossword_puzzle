@@ -268,6 +268,7 @@ dependencies = [
 name = "crossword_puzzle"
 version = "1.0.0"
 dependencies = [
+ "hex",
  "near-sdk",
  "uint",
 ]

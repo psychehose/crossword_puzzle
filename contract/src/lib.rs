@@ -7,38 +7,36 @@
  */
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{log, near_bindgen};
+use near_sdk::{env, log, near_bindgen};
 
-// Define the default message
-const DEFAULT_MESSAGE: &str = "Hello";
+// 인메모리에 저장
+const PUZZLE_NUMBER: u8 = 1;
 
-// Define the contract structure
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(Default, BorshDeserialize, BorshSerialize)]
 pub struct Contract {
-    message: String,
+    // 영구스토리지에 저장됨
+    crossword_solution: String
 }
 
-// Define the default, which automatically initializes the contract
-impl Default for Contract{
-    fn default() -> Self{
-        Self{message: DEFAULT_MESSAGE.to_string()}
-    }
-}
-
-// Implement the contract structure
 #[near_bindgen]
 impl Contract {
-    // Public method - returns the greeting saved, defaulting to DEFAULT_MESSAGE
-    pub fn get_greeting(&self) -> String {
-        return self.message.clone();
+
+    pub fn get_puzzle_number(&self) -> u8 {
+        PUZZLE_NUMBER
     }
 
-    // Public method - accepts a greeting, such as "howdy", and records it
-    pub fn set_greeting(&mut self, message: String) {
-        // Use env::log to record logs permanently to the blockchain!
-        log!("Saving greeting {}", message);
-        self.message = message;
+    pub fn set_solution(&mut self, solution: String) {
+        self.crossword_solution = solution;
+    }
+
+    // 로그에 일정량의 가스가 필요하기 떄문에
+    pub fn guess_solution(&mut self, solution: String) {
+        if solution == self.crossword_solution {
+            env::log_str("You guessed right")
+        } else {
+            env::log_str(("Try again"))
+        }
     }
 }
 

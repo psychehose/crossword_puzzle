@@ -265,6 +265,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossword_puzzle"
+version = "1.0.0"
+dependencies = [
+ "near-sdk",
+ "uint",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -478,14 +486,6 @@ name = "heck"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
-
-[[package]]
-name = "hello_near"
-version = "1.0.0"
-dependencies = [
- "near-sdk",
- "uint",
-]
 
 [[package]]
 name = "hex"

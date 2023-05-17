@@ -11,6 +11,7 @@ use near_sdk::{AccountId, env, log, near_bindgen, Promise};
 use near_sdk::collections::{ LookupMap, UnorderedSet } ;
 use near_sdk::json_types::U128;
 use near_sdk::PromiseOrValue;
+use near_sdk::serde::{Deserialize, Serialize};
 
 // 인메모리에 저장
 const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;

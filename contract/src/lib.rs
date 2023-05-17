@@ -7,24 +7,18 @@
  */
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{AccountId, env, log, near_bindgen, Promise};
+use near_sdk::{AccountId, env, log, near_bindgen, PanicOnDefault, Promise};
 use near_sdk::collections::{ LookupMap, UnorderedSet } ;
 use near_sdk::json_types::U128;
-use near_sdk::PromiseOrValue;
 use near_sdk::serde::{Deserialize, Serialize};
 
 // 인메모리에 저장
 const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;
 
-#[derive(Serialize, Deserialize)]
+
+
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
-pub struct StorageBalance {
-    pub total: U128,
-    pub available: U128,
-}
-
-
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct JsonPuzzle {
     solution_hash: String,
     status: PuzzleStatus,
@@ -44,7 +38,7 @@ pub enum PuzzleStatus {
     Solved { memo: String },
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Debug)]
+#[derive(BorshDeserialize, BorshSerialize,Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Answer {
     num: u8,
@@ -71,7 +65,7 @@ pub enum AnswerDirection {
 
 
 #[near_bindgen]
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(PanicOnDefault, BorshDeserialize, BorshSerialize)]
 pub struct Crossword {
     // 영구스토리지에 저장됨
     owner_id: AccountId,
@@ -112,7 +106,7 @@ impl Crossword {
         self.unsolved_puzzles.insert(&solution_hash);
     }
 
-    pub fn submit_solutions(&mut self, solution: String, memo: String) -> Promise {
+    pub fn submit_solutions(&mut self, solution: String, memo: String) {
         let hashed_input = env::sha256(solution.as_bytes());
         let hashed_input_hex = hex::encode(&hashed_input);
         let mut puzzle = self

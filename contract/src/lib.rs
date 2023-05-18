@@ -6,16 +6,14 @@
  *
  */
 
-use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{AccountId, env, log, near_bindgen, PanicOnDefault, Promise};
-use near_sdk::collections::{ LookupMap, UnorderedSet } ;
+use near_sdk::borsh::{ self, BorshDeserialize, BorshSerialize };
+use near_sdk::{ AccountId, env, log, near_bindgen, PanicOnDefault, Promise };
+use near_sdk::collections::{ LookupMap, UnorderedSet };
 use near_sdk::json_types::U128;
-use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::serde::{ Deserialize, Serialize };
 
 // 인메모리에 저장
 const PRIZE_AMOUNT: u128 = 5_000_000_000_000_000_000_000_000;
-
-
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -23,6 +21,11 @@ pub struct JsonPuzzle {
     solution_hash: String,
     status: PuzzleStatus,
     answer: Vec<Answer>,
+}
+#[derive(Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct UnsolvedPuzzles {
+    puzzles: Vec<JsonPuzzle>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
@@ -35,15 +38,17 @@ pub struct Puzzle {
 #[serde(crate = "near_sdk::serde")]
 pub enum PuzzleStatus {
     Unsolved,
-    Solved { memo: String },
+    Solved {
+        memo: String,
+    },
 }
 
-#[derive(BorshDeserialize, BorshSerialize,Deserialize, Serialize, Debug)]
+#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Answer {
     num: u8,
-    start: CoordinatePair,  // ⟵ Another struct we've defined
-    direction: AnswerDirection,  // ⟵ An enum we'll get to soon
+    start: CoordinatePair, // ⟵ Another struct we've defined
+    direction: AnswerDirection, // ⟵ An enum we'll get to soon
     length: u8,
     clue: String,
 }
@@ -61,8 +66,6 @@ pub enum AnswerDirection {
     Across,
     Down,
 }
-
-
 
 #[near_bindgen]
 #[derive(PanicOnDefault, BorshDeserialize, BorshSerialize)]
@@ -84,10 +87,6 @@ impl Crossword {
         }
     }
 
-    pub fn return_some_words() -> Vec<String> {
-        vec!["crossword".to_string(), "puzzle".to_string()]
-    }
-
     pub fn new_puzzle(&mut self, solution_hash: String, answers: Vec<Answer>) {
         assert_eq!(
             env::predecessor_account_id(),
@@ -97,27 +96,25 @@ impl Crossword {
 
         let existing = self.puzzles.insert(
             &solution_hash,
-            &Puzzle {
+            &(Puzzle {
                 status: PuzzleStatus::Unsolved,
                 answer: answers,
-            },
+            })
         );
         assert!(existing.is_none(), "Puzzle with that key already exists");
         self.unsolved_puzzles.insert(&solution_hash);
     }
 
-    pub fn submit_solutions(&mut self, solution: String, memo: String) {
+    pub fn submit_solution(&mut self, solution: String, memo: String) {
         let hashed_input = env::sha256(solution.as_bytes());
         let hashed_input_hex = hex::encode(&hashed_input);
-        let mut puzzle = self
-            .puzzles
-            .get(&hashed_input_hex)
-            .expect("ERR_NOT_CORRECT_ANSWER");
+        let mut puzzle = self.puzzles.get(&hashed_input_hex).expect("ERR_NOT_CORRECT_ANSWER");
 
         puzzle.status = match puzzle.status {
-            PuzzleStatus::Unsolved => PuzzleStatus::Solved {
-                memo: memo.clone()
-            },
+            PuzzleStatus::Unsolved =>
+                PuzzleStatus::Solved {
+                    memo: memo.clone(),
+                },
             _ => {
                 env::panic_str("ERR_PUZZLE_SOLVED");
             }
@@ -126,16 +123,37 @@ impl Crossword {
         self.puzzles.insert(&hashed_input_hex, &puzzle);
         self.unsolved_puzzles.remove(&hashed_input_hex);
 
-        log!(
-            "Puzzle with solution hash {} solved, with memo {}",
-            hashed_input_hex,
-            memo
-        );
+        log!("Puzzle with solution hash {} solved, with memo {}", hashed_input_hex, memo);
 
         // 맞춘 사람에게 Prize Money 전송
 
         Promise::new(env::predecessor_account_id()).transfer(PRIZE_AMOUNT);
+    }
 
+    pub fn get_puzzle_status(&self, solution_hash: String) -> Option<PuzzleStatus> {
+        let puzzle = self.puzzles.get(&solution_hash);
+        if puzzle.is_none() {
+            return None;
+        }
+        Some(puzzle.unwrap().status)
+    }
+    pub fn get_unsolved_puzzles(&self) -> UnsolvedPuzzles {
+        let solution_hashes = self.unsolved_puzzles.to_vec();
+        let mut all_unsolved_puzzles = vec![];
+        for hash in solution_hashes {
+            let puzzle = self.puzzles
+                .get(&hash)
+                .unwrap_or_else(|| env::panic_str("ERR_LOADING_PUZZLE"));
+            let json_puzzle = JsonPuzzle {
+                solution_hash: hash,
+                status: puzzle.status,
+                answer: puzzle.answer,
+            };
+            all_unsolved_puzzles.push(json_puzzle);
+        }
+        UnsolvedPuzzles {
+            puzzles: all_unsolved_puzzles,
+        }
     }
 
     /* Version 1 */
@@ -174,8 +192,8 @@ impl Crossword {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::test_utils::{get_logs, VMContextBuilder};
-    use near_sdk::{testing_env, AccountId};
+    use near_sdk::test_utils::{ get_logs, VMContextBuilder };
+    use near_sdk::{ testing_env, AccountId };
 
     fn get_context(predecessor: AccountId) -> VMContextBuilder {
         let mut builder = VMContextBuilder::new();
@@ -199,7 +217,5 @@ mod tests {
         let debug_hash_bytes = env::sha256(debug_solution.as_bytes());
         let debug_hash_string = hex::encode(debug_hash_bytes);
         println!("Let's debug: {:?}", debug_hash_string);
-
-
     }
 }

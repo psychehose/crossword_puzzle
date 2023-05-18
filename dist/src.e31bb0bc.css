@@ -70,8 +70,12 @@ span.important {
     margin: .5em;
 }
 
-#page h1, #page.no-puzzles {
+#page h1, #page .no-puzzles {
     text-align: center;
+}
+
+#page .no-puzzles .cli-command {
+    text-align: left;
 }
 
 #page.claim {
@@ -79,5 +83,26 @@ span.important {
     width: 576px;
 }
 
+button, .highlight {
+    border-radius: 5px;
+    border: 0.1em solid #262626;
+    padding: 0.5em 1em;
+}
+
+button:hover, button:focus, button:focus-within, .highlight:hover, .highlight:focus, .highlight:focus-within {
+    border-color: #5F8AFA;
+}
+
+#login {
+    text-align: right;
+}
+
+button {
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    outline: none;
+}
 
 /*# sourceMappingURL=/src.e31bb0bc.css.map */
